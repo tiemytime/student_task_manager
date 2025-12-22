@@ -90,7 +90,12 @@ exports.createTaskValidation = [
         throw new Error('Due date cannot be in the past');
       }
       return true;
-    })
+    }),
+  
+  body('dueTime')
+    .optional()
+    .matches(/^([01]\d|2[0-3]):([0-5]\d)$/)
+    .withMessage('Time must be in HH:MM format (24-hour, e.g., 14:30)')
 ];
 
 exports.updateTaskValidation = [
@@ -117,6 +122,11 @@ exports.updateTaskValidation = [
     .optional()
     .isISO8601()
     .withMessage('Please provide a valid date'),
+  
+  body('dueTime')
+    .optional()
+    .matches(/^([01]\d|2[0-3]):([0-5]\d)$/)
+    .withMessage('Time must be in HH:MM format (24-hour, e.g., 14:30)'),
   
   body('completed')
     .optional()

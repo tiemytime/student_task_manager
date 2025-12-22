@@ -10,6 +10,7 @@ const {
 
 const {
   getTaskNotifications,
+  getUrgentNotifications,
   getOverdueCount,
   getTasksDueSoon
 } = require('../controllers/notificationController');
@@ -27,6 +28,7 @@ const {
 router.use(protect);
 
 // Notification routes (place before /:id to avoid conflicts)
+router.get('/notifications/urgent', getUrgentNotifications);
 router.get('/notifications', getTaskNotifications);
 router.get('/overdue-count', getOverdueCount);
 router.get('/due-soon', getTasksDueSoon);

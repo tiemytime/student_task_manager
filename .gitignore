@@ -1,5 +1,6 @@
 node_modules/
 .env
+.env.example
 .DS_Store
 *.log
 dist/
@@ -8,3 +9,4 @@ coverage/
 SETUP_REVIEW.txt
 document
 
+notificationController.js.backup
