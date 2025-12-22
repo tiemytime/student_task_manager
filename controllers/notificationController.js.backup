@@ -1,0 +1,177 @@
+const Task = require('../models/Task');
+const User = require('../models/User');
+
+const getPendingNotifications = async (req, res, next) => {
+  try {
+    const tasks = await Task.find({
+      userId: req.user.id,
+      completed: false,
+      notificationSent: false
+    });
+
+    const tasksNeedingNotification = tasks.filter(task => task.needsNotification);
+
+    res.status(200).json({
+      status: 'success',
+      count: tasksNeedingNotification.length,
+      data: tasksNeedingNotification
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getOverdueTasks = async (req, res, next) => {
+  try {
+    const tasks = await Task.find({
+      userId: req.user.id,
+      completed: false
+    });
+
+    const overdueTasks = tasks.filter(task => task.isOverdue);
+
+    res.status(200).json({
+      status: 'success',
+      count: overdueTasks.length,
+      data: overdueTasks
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getDueSoonTasks = async (req, res, next) => {
+  try {
+    const tasks = await Task.find({
+      userId: req.user.id,
+      completed: false
+    });
+
+    const dueSoonTasks = tasks.filter(task => task.isDueSoon);
+
+    res.status(200).json({
+      status: 'success',
+      count: dueSoonTasks.length,
+      data: dueSoonTasks
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const markNotificationSent = async (req, res, next) => {
+  try {
+    const task = await Task.findById(req.params.taskId);
+
+    if (!task) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Task not found'
+      });
+    }
+
+    if (task.userId.toString() !== req.user.id) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Not authorized'
+      });
+    }
+
+    task.notificationSent = true;
+    task.notifiedAt = new Date();
+    await task.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Notification marked as sent',
+      data: task
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const sendNotification = async (req, res, next) => {
+  try {
+    const task = await Task.findById(req.params.taskId);
+
+    if (!task) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Task not found'
+      });
+    }
+
+    if (task.userId.toString() !== req.user.id) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Not authorized'
+      });
+    }
+
+    const user = await User.findById(req.user.id);
+    const notificationMessage = `⏰ REMINDER: "${task.title}" is due`;
+
+    task.notificationSent = true;
+    task.notifiedAt = new Date();
+    await task.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Notification sent successfully',
+      data: {
+        task: task,
+        notification: {
+          recipient: user.email,
+          message: notificationMessage,
+          sentAt: new Date()
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const checkAndSendAllNotifications = async (req, res, next) => {
+  try {
+    const tasks = await Task.find({
+      completed: false,
+      notificationSent: false
+    }).populate('userId', 'name email');
+
+    const tasksNeedingNotification = tasks.filter(task => task.needsNotification);
+    const notifications = [];
+
+    for (const task of tasksNeedingNotification) {
+      task.notificationSent = true;
+      task.notifiedAt = new Date();
+      await task.save();
+
+      notifications.push({
+        taskId: task._id,
+        userId: task.userId._id,
+        userEmail: task.userId.email,
+        sentAt: new Date()
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: `Sent ${notifications.length} notifications`,
+      count: notifications.length,
+      data: notifications
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  getPendingNotifications,
+  getOverdueTasks,
+  getDueSoonTasks,
+  markNotificationSent,
+  sendNotification,
+  checkAndSendAllNotifications
+};
