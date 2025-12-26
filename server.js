@@ -50,6 +50,7 @@ app.use('/api/', apiLimiter);
 // Routes
 app.use('/api/tasks', require('./routes/taskRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/todos', require('./routes/todoRoutes'));
 
 // Health check route
 app.get('/api/health', (req, res) => {
