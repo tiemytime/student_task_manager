@@ -19,6 +19,7 @@ const app = express();
 // Middleware
 // Allow CORS from frontend (supports multiple ports for dev)
 const allowedOrigins = [
+  'https://study-task-tracker.vercel.app',
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:5175',
